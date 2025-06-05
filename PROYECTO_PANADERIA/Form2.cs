@@ -21,6 +21,10 @@ namespace PROYECTO_PANADERIA
         string connectionString = "server=127.0.0.1;port=3306;user=root;password=panaderia123;database=pnaderiaedgar";
         static string conexion = "SERVER=127.0.0.1;PORT=3306; DATABASE=pnaderiaedgar; UID=root;PASSWORD=panaderia123;";
         MySqlConnection cn = new MySqlConnection(conexion);
+        public static class Session
+        {
+            public static string UsuarioActual;
+        }
 
         private void CargarRoles()
         {

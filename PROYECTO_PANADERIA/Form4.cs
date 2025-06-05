@@ -25,6 +25,7 @@ using System;
 using System.Data;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
+using static PROYECTO_PANADERIA.Form1;
 
 namespace PROYECTO_PANADERIA
 {
@@ -113,6 +114,10 @@ namespace PROYECTO_PANADERIA
         //    }
 
         //}
+        public static class Session
+        {
+            public static string UsuarioActual;
+        }
 
         private void CargarCategorias()
         {
@@ -158,46 +163,52 @@ namespace PROYECTO_PANADERIA
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(NOMBRE.Text) ||
-                string.IsNullOrWhiteSpace(PRECIO.Text) ||
-                string.IsNullOrWhiteSpace(STOCK.Text) ||
-                comboCategoria.SelectedValue == null)
-            {
-                MessageBox.Show("Por favor completa todos los campos.");
-                return;
-            }
-
             try
             {
-                string insertQuery = @"INSERT INTO productos (Nombre, CategoriaID, Precio, Stock) 
-                                       VALUES (@Nombre, @CategoriaID, @Precio, @Stock)";
-
                 using (MySqlConnection cn = new MySqlConnection(connectionString))
-                using (MySqlCommand cmd = new MySqlCommand(insertQuery, cn))
                 {
-                    cmd.Parameters.AddWithValue("@Nombre", NOMBRE.Text.Trim());
-                    cmd.Parameters.AddWithValue("@CategoriaID", comboCategoria.SelectedValue);
-                    cmd.Parameters.AddWithValue("@Precio", Convert.ToDecimal(PRECIO.Text));
-                    cmd.Parameters.AddWithValue("@Stock", Convert.ToInt32(STOCK.Text));
+                    cn.Open(); // 🔴 ABRIR la conexión antes de cualquier comando
 
-                    cn.Open();
-                    cmd.ExecuteNonQuery();
-                    cn.Close();
+                    // Establecer usuario de sesión
+                    using (MySqlCommand setCmd = new MySqlCommand("SET @usuario_sistema = @usuario", cn))
+                    {
+                        setCmd.Parameters.AddWithValue("@usuario", Session.UsuarioActual);
+                        setCmd.ExecuteNonQuery();
+                    }
 
-                    MessageBox.Show("Producto registrado correctamente.");
-                    dataGridView1.DataSource = LlenarGrid();
-                 
-                    NOMBRE.Clear();
-                    STOCK.Clear();
-                    PRECIO.Clear();
-                    comboCategoria.SelectedIndex = -1;
+                    // INSERTAR el producto
+                    string insertQuery = @"INSERT INTO productos (Nombre, CategoriaID, Precio, Stock) 
+                               VALUES (@Nombre, @CategoriaID, @Precio, @Stock)";
+                    using (MySqlCommand cmd = new MySqlCommand(insertQuery, cn))
+                    {
+                        cmd.Parameters.AddWithValue("@Nombre", NOMBRE.Text.Trim());
+                        cmd.Parameters.AddWithValue("@CategoriaID", comboCategoria.SelectedValue);
+                        cmd.Parameters.AddWithValue("@Precio", Convert.ToDecimal(PRECIO.Text));
+                        cmd.Parameters.AddWithValue("@Stock", Convert.ToInt32(STOCK.Text));
+
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    cn.Close(); // (Opcional, el using lo hace automáticamente)
                 }
+
+                MessageBox.Show("Producto registrado correctamente.");
+                dataGridView1.DataSource = LlenarGrid();
+
+                // Limpiar campos
+                NOMBRE.Clear();
+                STOCK.Clear();
+                PRECIO.Clear();
+                comboCategoria.SelectedIndex = -1;
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error al registrar producto: " + ex.Message);
             }
+
         }
+
+
 
         private void button2_Click(object sender, EventArgs e)
         {

@@ -43,6 +43,10 @@ namespace PROYECTO_PANADERIA
                 return sb.ToString();
             }
         }
+        public static class SesionUsuario
+        {
+            public static string NombreUsuario { get; set; }
+        }
 
         public void Login()
         {
@@ -62,6 +66,11 @@ namespace PROYECTO_PANADERIA
                     {
                         if (reader.HasRows)
                         {
+                            reader.Read();
+
+                            // Guardar nombre de usuario en sesión
+                            SesionUsuario.NombreUsuario = reader["Usuario"].ToString();
+
                             MessageBox.Show("Inicio de sesión exitoso.");
                             this.DialogResult = DialogResult.OK;
                             this.Close(); // Cierra el formulario actual (login)
@@ -78,6 +87,7 @@ namespace PROYECTO_PANADERIA
                 }
             }
         }
+
 
         private void INGRESAR_Click(object sender, EventArgs e)
         {
